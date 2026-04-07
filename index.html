@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S 0 S MODS - RGB Text Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kavoon&family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
+    <style>
+        :root { 
+            --bg: #050505; 
+            --card: rgba(15, 15, 15, 0.95); 
+            --font-main: 'Kavoon', serif;
+            --font-mm: 'Noto Sans Myanmar', sans-serif;
+        }
+        
+        /* RGB Text Animation Keyframes */
+        @keyframes rgb-text {
+            0% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+            33% { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+            66% { color: #0000ff; text-shadow: 0 0 10px #0000ff; }
+            100% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+        }
+
+        body { 
+            background: var(--bg); color: white; font-family: var(--font-mm);
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box;
+            background-image: radial-gradient(circle at center, #151515 0%, #000 100%);
+            overflow: hidden;
+        }
+
+        .player-main-container {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 330px; height: calc(100vh - 30px);
+        }
+
+        /* 1. Developer Name RGB */
+        .dev-tag {
+            font-family: var(--font-main);
+            font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;
+            text-transform: uppercase;
+            animation: rgb-text 3s linear infinite;
+        }
+
+        .player-card { 
+            background: var(--card); padding: 25px; border-radius: 25px; 
+            width: 100%; text-align: center; position: relative;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9); margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        /* 2. Lyrics RGB */
+        .lyrics-box { 
+            height: 50px; font-size: 0.9rem; margin-bottom: 15px; 
+            display: flex; align-items: center; justify-content: center; 
+            background: rgba(0,0,0,0.5); border-radius: 12px; padding: 8px;
+            animation: rgb-text 4s linear infinite;
+            font-weight: bold;
+        }
+
+        /* 3. Title RGB */
+        .song-info h2 { 
+            font-family: var(--font-main); margin: 0; font-size: 1.6rem; 
+            animation: rgb-text 5s linear infinite;
+        }
+
+        /* 4. Artist RGB */
+        .song-info p { 
+            margin: 5px 0 25px 0; font-size: 0.85rem; 
+            letter-spacing: 1px; font-weight: bold;
+            animation: rgb-text 6s linear infinite;
+        }
+
+        .progress-bar { 
+            width: 100%; height: 5px; background: rgba(255,255,255,0.05); 
+            border-radius: 10px; margin-bottom: 25px; cursor: pointer; 
+        }
+        #progress { 
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #f00, #0f0, #00f, #f0f);
+            background-size: 300% 100%;
+            animation: rgb-flow 2s linear infinite;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5); border-radius: 10px;
+        }
+
+        @keyframes rgb-flow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+        .controls { display: flex; justify-content: center; gap: 15px; align-items: center; }
+        
+        /* 5. Buttons RGB Border */
+        .btn { 
+            background: transparent; border: 2px solid transparent;
+            background-image: linear-gradient(var(--card), var(--card)), linear-gradient(45deg, #f00, #0f0, #00f);
+            background-origin: border-box; background-clip: content-box, border-box;
+            color: #fff; border-radius: 50%; width: 50px; height: 50px; 
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .play-btn { 
+            width: 70px; height: 70px; 
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        /* 6. Song List Details RGB */
+        .song-list-wrapper {
+            width: 100%; background: rgba(10, 10, 10, 0.7); 
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex; flex-direction: column; overflow: hidden; flex-grow: 1;
+        }
+        .song-list-header {
+            font-family: var(--font-main); font-size: 0.75rem;
+            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.02);
+            animation: rgb-text 8s linear infinite;
+        }
+
+        .song-list { overflow-y: auto; padding: 10px; }
+        .song-item { 
+            padding: 12px; cursor: pointer; border-radius: 15px; 
+            transition: 0.2s; margin-bottom: 6px; border: 1px solid transparent;
+        }
+        .song-item.active { 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .song-item.active .song-item-title { 
+            animation: rgb-text 3s linear infinite; 
+            font-weight: bold;
+        }
+        .song-item-title { font-size: 0.9rem; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="player-main-container">
+    <div class="dev-tag">Developer: ကိုမျိုး</div>
+    
+    <div class="player-card">
+        <div class="lyrics-box" id="lyrics-text">S 0 S MODS RGB</div>
+        
+        <div class="song-info">
+            <h2 id="title">SYNCING</h2>
+            <p id="artist">S 0 S MODS</p>
+        </div>
+
+        <div class="progress-bar" id="p-box" onclick="seek(event)"><div id="progress"></div></div>
+
+        <div class="controls">
+            <button class="btn" onclick="prev()">⏮</button>
+            <button class="btn play-btn" onclick="toggle()" id="playB">PLAY</button>
+            <button class="btn" onclick="next()">⏭</button>
+        </div>
+    </div>
+
+    <div class="song-list-wrapper">
+        <div class="song-list-header">TRACKLIST</div>
+        <div class="song-list" id="list-container"></div>
+    </div>
+</div>
+
+<audio id="audio" crossorigin="anonymous"></audio>
+
+<script>
+    const { Client, Databases } = Appwrite;
+    const client = new Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('69d4b1300032c235932d');
+    const databases = new Databases(client);
+    const audio = document.getElementById('audio');
+    
+    let songs = [];
+    let currentIdx = 0;
+
+    async function initPlayer() {
+        try {
+            const response = await databases.listDocuments('69d4b25f0004ed8a26a2', 'cloud');
+            songs = response.documents.map(doc => {
+                let pL = {};
+                try { pL = JSON.parse(doc.lyrics.replace(/'/g, '"')); } catch(e) { pL = { 0: doc.lyrics || "..." }; }
+                return { title: doc.title, artist: doc.artist, src: doc.src, lyrics: pL };
+            });
+            renderList();
+            loadSong(0);
+        } catch (error) { document.getElementById('title').innerText = "ERROR"; }
+    }
+
+    function renderList() {
+        const container = document.getElementById('list-container');
+        container.innerHTML = songs.map((s, i) => `
+            <div class="song-item ${i === currentIdx ? 'active' : ''}" onclick="selectSong(${i})">
+                <span class="song-item-title">${i + 1}. ${s.title}</span>
+            </div>
+        `).join('');
+    }
+
+    function loadSong(index) {
+        currentIdx = index;
+        audio.src = songs[currentIdx].src;
+        document.getElementById('title').innerText = songs[currentIdx].title;
+        document.getElementById('artist').innerText = songs[currentIdx].artist;
+        renderList();
+    }
+
+    function selectSong(i) { loadSong(i); audio.play(); document.getElementById('playB').innerText = "PAUSE"; }
+    function toggle() {
+        if (audio.paused) { audio.play(); document.getElementById('playB').innerText = "PAUSE"; }
+        else { audio.pause(); document.getElementById('playB').innerText = "PLAY"; }
+    }
+    function next() { currentIdx = (currentIdx + 1) % songs.length; loadSong(currentIdx); audio.play(); document.getElementById('playB').innerText = "PAUSE"; }
+    function prev() { currentIdx = (currentIdx - 1 + songs.length) % songs.length; loadSong(currentIdx); audio.play(); document.getElementById('playB').innerText = "PAUSE"; }
+    function seek(e) { audio.currentTime = (e.offsetX / document.getElementById('p-box').offsetWidth) * audio.duration; }
+
+    audio.addEventListener('timeupdate', () => {
+        const ct = Math.floor(audio.currentTime);
+        if (songs.length > 0) {
+            const l = songs[currentIdx].lyrics;
+            if (l[ct]) document.getElementById('lyrics-text').innerText = l[ct];
+            document.getElementById('progress').style.width = (audio.currentTime / audio.duration) * 100 + '%';
+        }
+    });
+
+    audio.addEventListener('ended', next);
+    initPlayer();
+</script>
+</body>
+</html>
