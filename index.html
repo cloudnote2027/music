@@ -214,165 +214,6 @@
             font-size: 0.9rem;
         }
 
-        /* ========== MENU STYLES - LEFT SIDE ========== */
-        
-        .menu-toggle {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid transparent;
-            background-image: linear-gradient(rgba(15,15,15,0.95), rgba(15,15,15,0.95)), 
-                              linear-gradient(45deg, #f00, #0f0, #00f);
-            background-origin: border-box;
-            background-clip: content-box, border-box;
-            color: #fff;
-            border-radius: 12px;
-            width: 45px;
-            height: 45px;
-            font-size: 1.3rem;
-            cursor: pointer;
-            z-index: 100;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .menu-toggle:hover { 
-            transform: scale(1.1); 
-            box-shadow: 0 0 20px rgba(0,255,255,0.6); 
-        }
-        .menu-panel {
-            position: fixed;
-            top: 0;
-            left: -350px;
-            width: 320px;
-            height: 100vh;
-            background: rgba(10, 10, 10, 0.98);
-            backdrop-filter: blur(20px);
-            border-left: none;
-            border-right: 2px solid rgba(0, 255, 255, 0.3);
-            padding: 25px;
-            z-index: 1000;
-            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: 10px 0 40px rgba(0,0,0,0.9);
-            overflow-y: auto;
-        }
-        
-        .menu-panel.active { 
-            left: 0;
-        }
-
-        .menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .menu-title {
-            font-family: var(--font-main);
-            font-size: 1.2rem;
-            animation: rgb-text 4s linear infinite;
-            letter-spacing: 2px;
-        }
-        
-        .menu-close {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .menu-close:hover { 
-            background: rgba(255,0,0,0.3); 
-            transform: rotate(90deg); 
-        }
-
-        .menu-items {
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .menu-item:hover {
-            background: rgba(0,255,255,0.1);
-            border-color: rgba(0,255,255,0.4);
-            transform: translateX(8px);
-            box-shadow: 0 5px 15px rgba(0,255,255,0.2);
-        }
-        
-        .menu-item-icon { 
-            margin-right: 12px; 
-            font-size: 1.3rem; 
-        }
-        
-        .menu-item-label {
-            flex: 1;
-        }
-        
-        .menu-item select {
-            background: rgba(0,0,0,0.5);
-            color: #0ff;
-            border: 1px solid rgba(0,255,255,0.3);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 0.85rem;            cursor: pointer;
-            outline: none;
-        }
-
-        .menu-footer {
-            padding-top: 20px;
-            border-top: 2px solid rgba(255,255,255,0.1);
-            text-align: center;
-            color: #666;
-            font-size: 0.75rem;
-            margin-top: 20px;
-        }
-
-        .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .menu-overlay.active { 
-            opacity: 1; 
-            visibility: visible; 
-        }
-
         .toast {
             position: fixed;
             bottom: 30px;
@@ -391,11 +232,8 @@
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
+
         @media (max-width: 360px) {
-            .menu-panel { 
-                width: 280px; 
-                left: -280px; 
-            }
             .player-main-container { 
                 max-width: 100%; 
             }
@@ -405,11 +243,8 @@
 <body>
 
 <div class="player-main-container">
-    <div class="dev-tag">Developer: ကိုမျိုး</div>
-    
+    <div class="dev-tag">Developer: ကိုမျိုး</div>    
     <div class="player-card">
-        <button class="menu-toggle" onclick="toggleMenu()" title="Menu">☰</button>
-        
         <div class="lyrics-box" id="lyrics-text">S 0 S MODS RGB</div>
         
         <div class="song-info">
@@ -439,48 +274,6 @@
     </div>
 </div>
 
-<!-- Menu Panel --><div class="menu-panel" id="menuPanel">
-    <div class="menu-header">
-        <span class="menu-title">⚙️ SETTINGS</span>
-        <button class="menu-close" onclick="toggleMenu()">✕</button>
-    </div>
-    <div class="menu-items">
-        <div class="menu-item" onclick="toggleTheme()">
-            <span class="menu-item-icon">🎨</span>
-            <span class="menu-item-label">Theme Toggle</span>
-        </div>
-        <div class="menu-item" onclick="showAbout()">
-            <span class="menu-item-icon">ℹ️</span>
-            <span class="menu-item-label">About Developer</span>
-        </div>
-        <div class="menu-item" onclick="clearCache()">
-            <span class="menu-item-icon">🗑️</span>
-            <span class="menu-item-label">Clear Cache</span>
-        </div>
-        <div class="menu-item" onclick="toggleVisualizer()">
-            <span class="menu-item-icon">🌊</span>
-            <span class="menu-item-label">Audio Visualizer</span>
-            <span id="vizStatus" style="color:#0ff;margin-left:auto;">ON</span>
-        </div>
-        <div class="menu-item">
-            <span class="menu-item-icon">⚡</span>
-            <span class="menu-item-label">Playback Speed</span>
-            <select id="speedSelect" onchange="changeSpeed(this.value)">
-                <option value="0.5">0.5x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2">2x</option>
-            </select>
-        </div>
-    </div>
-    <div class="menu-footer">
-        <small>S 0 S MODS v1.1<br>Developer: ကိုမျိုး</small>
-    </div>
-</div>
-
-<!-- Menu Overlay -->
-<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-
 <audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
@@ -488,9 +281,10 @@
     const client = new Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('69d4b1300032c235932d');
     const databases = new Databases(client);
     const audio = document.getElementById('audio');
-        let songs = [];
+    
+    let songs = [];
     let currentIdx = 0;
-    let visualizerEnabled = true; // Default ON
+    let visualizerEnabled = true;
     
     // Audio Context for Visualizer
     let audioContext;
@@ -498,8 +292,7 @@
     let source;
     let canvas, ctx;
     let bufferLength;
-    let dataArray;
-    let isAudioContextInitialized = false;
+    let dataArray;    let isAudioContextInitialized = false;
 
     // Demo Songs (Fallback if Appwrite fails)
     const demoSongs = [
@@ -537,7 +330,8 @@
                         pL = JSON.parse(doc.lyrics.replace(/'/g, '"')); 
                     } catch(e) { 
                         pL = { 0: doc.lyrics || "..." }; 
-                    }                    return { 
+                    }
+                    return { 
                         title: doc.title, 
                         artist: doc.artist, 
                         src: doc.src, 
@@ -547,12 +341,9 @@
                 showToast('✅ Loaded ' + songs.length + ' songs from server');
             } else {
                 throw new Error("No songs found");
-            }
-        } catch (error) { 
+            }        } catch (error) { 
             console.error("Appwrite Error:", error);
             showToast('⚠️ Using Demo Songs');
-            
-            // Use demo songs as fallback
             songs = demoSongs;
         }
         
@@ -565,7 +356,6 @@
             document.getElementById('list-container').innerHTML = '<div class="loading-text">No songs available</div>';
         }
         
-        // Initialize Visualizer Canvas
         initVisualizer();
     }
 
@@ -573,20 +363,19 @@
         canvas = document.getElementById('visualizer-canvas');
         ctx = canvas.getContext('2d');
         
-        // Set canvas size
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         
-        bufferLength = 128; // Number of bars
+        bufferLength = 128;
         dataArray = new Uint8Array(bufferLength);
         
-        // Draw initial empty state
         drawVisualizer();
     }
 
     function initAudioContext() {
         if (isAudioContextInitialized) return;
-                try {
+        
+        try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioContext.createAnalyser();
             source = audioContext.createMediaElementSource(audio);
@@ -601,8 +390,7 @@
             isAudioContextInitialized = true;
             console.log("Audio Context Initialized");
         } catch (e) {
-            console.error("Audio Context Error:", e);
-        }
+            console.error("Audio Context Error:", e);        }
     }
 
     function drawVisualizer() {
@@ -611,7 +399,6 @@
         requestAnimationFrame(drawVisualizer);
         
         if (!analyser) {
-            // Fallback animation if no audio context
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
@@ -621,7 +408,6 @@
             for(let i = 0; i < bufferLength; i++) {
                 const barHeight = Math.random() * canvas.height * 0.5;
                 
-                // RGB Gradient
                 const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
                 gradient.addColorStop(0, '#ff0000');
                 gradient.addColorStop(0.5, '#00ff00');
@@ -635,7 +421,8 @@
             return;
         }
         
-        analyser.getByteFrequencyData(dataArray);        
+        analyser.getByteFrequencyData(dataArray);
+        
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
@@ -645,18 +432,14 @@
         for(let i = 0; i < bufferLength; i++) {
             const barHeight = (dataArray[i] / 255) * canvas.height;
             
-            // RGB Gradient based on frequency
             const hue = (i / bufferLength) * 360;
             ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
             
-            // Add glow effect
             ctx.shadowBlur = 10;
             ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
             
             ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-            
-            // Reset shadow for next frame
-            ctx.shadowBlur = 0;
+                        ctx.shadowBlur = 0;
             
             x += barWidth + 1;
         }
@@ -684,8 +467,8 @@
         document.getElementById('title').innerText = songs[currentIdx].title;
         document.getElementById('artist').innerText = songs[currentIdx].artist;
         document.getElementById('lyrics-text').innerText = "Ready to play";
-        renderList();        
-        // Initialize Audio Context on first load
+        renderList();
+        
         if (!isAudioContextInitialized) {
             initAudioContext();
         }
@@ -696,7 +479,6 @@
         audio.play(); 
         document.getElementById('playB').innerText = "PAUSE"; 
         
-        // Ensure Audio Context is running
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
         }
@@ -706,15 +488,12 @@
         if (audio.paused) { 
             if (!audio.src) {
                 showToast('⚠️ No song loaded');
-                return;
-            }
+                return;            }
             
-            // Initialize Audio Context if needed
             if (!isAudioContextInitialized) {
                 initAudioContext();
             }
             
-            // Resume Audio Context if suspended
             if (audioContext && audioContext.state === 'suspended') {
                 audioContext.resume();
             }
@@ -733,7 +512,8 @@
         loadSong(currentIdx); 
         audio.play(); 
         document.getElementById('playB').innerText = "PAUSE"; 
-                if (audioContext && audioContext.state === 'suspended') {
+        
+        if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
         }
     }
@@ -757,8 +537,7 @@
         audio.currentTime = pos * audio.duration; 
     }
 
-    audio.addEventListener('timeupdate', () => {
-        if (!audio.duration) return;
+    audio.addEventListener('timeupdate', () => {        if (!audio.duration) return;
         
         const ct = Math.floor(audio.currentTime);
         if (songs.length > 0 && songs[currentIdx]) {
@@ -777,64 +556,6 @@
         console.error("Audio Error:", e);
         showToast('⚠️ Error loading audio');
     });
-
-    // ========== MENU FUNCTIONS ==========
-
-    function toggleMenu() {
-        const panel = document.getElementById('menuPanel');
-        const overlay = document.getElementById('menuOverlay');        panel.classList.toggle('active');
-        overlay.classList.toggle('active');
-    }
-
-    function toggleTheme() {
-        const root = document.documentElement;
-        const currentBg = getComputedStyle(root).getPropertyValue('--bg').trim();
-        if (currentBg === '#050505') {
-            root.style.setProperty('--bg', '#1a1a2e');
-            root.style.setProperty('--card', 'rgba(26, 26, 46, 0.95)');
-            showToast('🌙 Midnight Theme Activated!');
-        } else {
-            root.style.setProperty('--bg', '#050505');
-            root.style.setProperty('--card', 'rgba(15, 15, 15, 0.95)');
-            showToast('🌑 Dark Theme Activated!');
-        }
-        toggleMenu();
-    }
-
-    function showAbout() {
-        alert('✨ S 0 S MODS RGB Player ✨\n\n👨‍ Developer: ကိုမျိုး\n🎵 Powered by Appwrite\n🌈 RGB Animation Edition\n\nThank you for using! ❤️');
-        toggleMenu();
-    }
-
-    function clearCache() {
-        if (confirm('Clear cached songs data?')) {
-            if ('caches' in window) {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
-            }
-            showToast('🗑️ Cache cleared!');
-        }
-        toggleMenu();
-    }
-
-    function toggleVisualizer() {
-        visualizerEnabled = !visualizerEnabled;
-        document.getElementById('vizStatus').innerText = visualizerEnabled ? 'ON' : 'OFF';
-        showToast(visualizerEnabled ? '🌊 Visualizer Enabled!' : '🌊 Visualizer Disabled');
-        
-        if (!visualizerEnabled && ctx) {
-            // Clear canvas when disabled
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } else if (visualizerEnabled) {
-            // Restart animation
-            drawVisualizer();
-        }
-    }
-    function changeSpeed(val) {
-        audio.playbackRate = parseFloat(val);
-        showToast('⚡ Speed: ' + val + 'x');
-    }
 
     function showToast(message) {
         const existingToast = document.querySelector('.toast');
@@ -855,7 +576,6 @@
         }, 2500);
     }
 
-    // Handle window resize for canvas
     window.addEventListener('resize', () => {
         if (canvas) {
             canvas.width = canvas.offsetWidth;
@@ -863,7 +583,6 @@
         }
     });
 
-    // Initialize
     window.addEventListener('DOMContentLoaded', initPlayer);
 </script>
 </body>
