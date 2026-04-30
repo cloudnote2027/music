@@ -4,108 +4,518 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S 0 S MODS - RGB Beat Visualizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kavoon&family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kavoon&family=Noto+Sans+Myanmar:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
+
     <style>
-        :root { 
-            --bg: #050505; 
-            --card: rgba(15, 15, 15, 0.95); 
+        :root {
+            --bg: #080808;
+            --card: rgba(14, 14, 14, 0.97);
+            --surface: rgba(20, 20, 20, 0.9);
+            --border: rgba(255,255,255,0.06);
+            --accent: #00ffcc;
+            --accent2: #ff0055;
+            --text: #e8e8e8;
+            --muted: #555;
             --font-main: 'Kavoon', serif;
             --font-mm: 'Noto Sans Myanmar', sans-serif;
+            --font-mono: 'Space Mono', monospace;
         }
-        
+
         @keyframes rgb-text {
-            0% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
-            33% { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
-            66% { color: #0000ff; text-shadow: 0 0 10px #0000ff; }
-            100% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+            0%   { color: #ff2244; text-shadow: 0 0 8px #ff2244; }
+            33%  { color: #00ffcc; text-shadow: 0 0 8px #00ffcc; }
+            66%  { color: #4488ff; text-shadow: 0 0 8px #4488ff; }
+            100% { color: #ff2244; text-shadow: 0 0 8px #ff2244; }
+        }
+        @keyframes rgb-border {
+            0%   { border-color: #ff2244; box-shadow: 0 0 12px #ff224444; }
+            33%  { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc44; }
+            66%  { border-color: #4488ff; box-shadow: 0 0 12px #4488ff44; }
+            100% { border-color: #ff2244; box-shadow: 0 0 12px #ff224444; }
+        }
+        @keyframes rgb-flow {
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to   { opacity: 1; max-height: 400px; }
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        body { 
-            background: var(--bg); color: white; font-family: var(--font-mm);
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; padding: 10px; /* Padding လျှော့ချ */
-            background-image: radial-gradient(circle at center, #151515 0%, #000 100%);
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-mm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px 8px;
+            background-image:
+                radial-gradient(ellipse at 20% 0%, rgba(0,255,204,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(255,0,85,0.04) 0%, transparent 50%),
+                radial-gradient(circle at center, #0d0d0d 0%, #000 100%);
             overflow-x: hidden;
         }
 
         .player-main-container {
-            display: flex; flex-direction: column; align-items: center;
-            width: 100%; 
-            max-width: 300px; /* အကျယ်ကို လျှော့ချ (၃၃၀ -> ၃၀၀) */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 340px;
             height: calc(100vh - 20px);
+        }
+
+        /* ── Header ── */
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .dev-tag {
+            font-family: var(--font-main);
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: rgb-text 3s linear infinite;
+        }
+        .live-dot {
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 1.2s ease-in-out infinite;
+            box-shadow: 0 0 6px var(--accent);
+        }
+
+        /* ── Player Card ── */
+        .player-card {
+            background: var(--card);
+            padding: 14px;
+            border-radius: 18px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+            animation: rgb-border 6s linear infinite;
+        }
+
+        /* Lyrics */
+        .lyrics-box {
+            height: 36px;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            border-radius: 8px;
+            padding: 4px 10px;
+            animation: rgb-text 4s linear infinite;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.04);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* Song Info */
+        .song-info { margin-bottom: 10px; }
+        .song-info h2 {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            animation: rgb-text 5s linear infinite;
+            line-height: 1.3;
+        }
+        .song-info p {
+            margin-top: 2px;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            font-weight: bold;
+            animation: rgb-text 6s linear infinite;
+            opacity: 0.8;
+        }
+
+        /* Visualizer */
+        #visualizer-canvas {
+            width: 100%;
+            height: 44px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.4);
+        }
+
+        /* Progress */
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .time-label {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--muted);
+            white-space: nowrap;
+            min-width: 28px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 8px;
+            cursor: pointer;
             position: relative;
         }
-
-        /* DEVELOPER စာသား သေးခြင်း */
-        .dev-tag { font-family: var(--font-main); font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; animation: rgb-text 3s linear infinite; }
-
-        .player-card { 
-            background: var(--card); 
-            padding: 15px; /* Padding လျှော့ချ (၂၅ -> ၁၅) */
-            border-radius: 20px; /* ခြင်းရာ radius လျှော့ချ */
-            width: 100%; text-align: center; 
-            position: relative; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9); 
-            margin-bottom: 15px; /* Margin လျှော့ချ */
-            flex-shrink: 0;
-            transition: box-shadow 0.1s ease, border-color 0.1s ease;
+        #progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff2244, #00ffcc, #4488ff, #ff2244);
+            background-size: 300% 100%;
+            animation: rgb-flow 3s linear infinite;
+            box-shadow: 0 0 8px rgba(0,255,204,0.5);
+            border-radius: 8px;
+            transition: width 0.1s linear;
         }
 
-        /* စာသား box သေးခြင်း */
-        .lyrics-box { 
-            height: 40px; /* အမြင့် လျှော့ချ (၅၀ -> ၄၀) */
-            font-size: 0.8rem; /* Font သေးခြင်း (၀.၉ -> ၀.၈) */
-            margin-bottom: 10px; 
-            display: flex; align-items: center; justify-content: center; 
-            background: rgba(0,0,0,0.5); border-radius: 10px; padding: 5px; 
-            animation: rgb-text 4s linear infinite; font-weight: bold;
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc;
+            border-radius: 50%;
+            width: 38px; height: 38px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn:active { transform: scale(0.9); background: rgba(255,255,255,0.08); }
+        .play-btn {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, rgba(0,255,204,0.12), rgba(255,0,85,0.12));
+            border: 1px solid rgba(0,255,204,0.3);
+            font-size: 1.1rem;
+            box-shadow: 0 0 20px rgba(0,255,204,0.15);
+        }
+        .play-btn:active { transform: scale(0.92); }
+
+        /* ── Bottom Panel ── */
+        .bottom-panel {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+            min-height: 0;
         }
 
-        /* သီချင်းခေါင်းစဉ် သေးခြင်း */
-        .song-info h2 { font-family: var(--font-main); margin: 0; font-size: 1.3rem; animation: rgb-text 5s linear infinite; }
-        /* အဆိုတော်နာမည် သေးခြင်း */
-        .song-info p { margin: 3px 0 15px 0; font-size: 0.75rem; letter-spacing: 1px; font-weight: bold; animation: rgb-text 6s linear infinite; }
-
-        /* Visualizer သေးခြင်း */
-        #visualizer-canvas { width: 100%; height: 50px; margin-bottom: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); }
-
-        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 15px; cursor: pointer; }
-        #progress { 
-            width: 0%; height: 100%; background: linear-gradient(90deg, #f00, #0f0, #00f, #f0f);
-            background-size: 300% 100%; animation: rgb-flow 2s linear infinite;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5); border-radius: 8px;
+        /* Search Bar */
+        .search-wrap {
+            padding: 10px 12px 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            pointer-events: none;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 7px 10px 7px 30px;
+            color: var(--text);
+            font-family: var(--font-mm);
+            font-size: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input::placeholder { color: var(--muted); }
+        .search-input:focus {
+            border-color: rgba(0,255,204,0.4);
+            box-shadow: 0 0 8px rgba(0,255,204,0.1);
+        }
+        .search-clear {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: none;
+            padding: 2px;
         }
 
-        @keyframes rgb-flow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 6px 12px 0;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: var(--font-mm);
+            font-size: 0.7rem;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            background: rgba(0,255,204,0.06);
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00ffcc, #4488ff);
+            border-radius: 2px 2px 0 0;
+        }
 
-        .controls { display: flex; justify-content: center; gap: 10px; align-items: center; }
-        /* Control ခလုတ်များ သေးခြင်း */
-        .btn { background: transparent; border: 2px solid transparent; background-image: linear-gradient(var(--card), var(--card)), linear-gradient(45deg, #f00, #0f0, #00f); background-origin: border-box; background-clip: content-box, border-box; color: #fff; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: 0.3s; font-size: 0.8rem; }
-        /* Play ခလုတ် သေးခြင်း */
-        .play-btn { width: 55px; height: 55px; box-shadow: 0 0 15px rgba(255,255,255,0.1); font-size: 0.7rem; }
+        /* Song List */
+        .song-list-header {
+            font-family: var(--font-mono);
+            font-size: 0.58rem;
+            color: var(--muted);
+            padding: 8px 14px 4px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .song-list {
+            overflow-y: auto;
+            padding: 4px 8px 8px;
+            scroll-behavior: smooth;
+            flex: 1;
+        }
+        .song-list::-webkit-scrollbar { width: 3px; }
+        .song-list::-webkit-scrollbar-track { background: transparent; }
+        .song-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 
-        .song-list-wrapper { width: 100%; background: rgba(10, 10, 10, 0.7); border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.03); display: flex; flex-direction: column; overflow: hidden; flex-grow: 1; }
-        .song-list-header { font-family: var(--font-main); font-size: 0.65rem; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.02); animation: rgb-text 8s linear infinite; }
+        .song-item {
+            padding: 9px 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+            margin-bottom: 3px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease both;
+        }
+        .song-item:active { transform: scale(0.98); }
+        .song-item.active {
+            background: rgba(0,255,204,0.05);
+            border-color: rgba(0,255,204,0.15);
+        }
+        .song-num {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--muted);
+            min-width: 18px;
+            text-align: right;
+        }
+        .song-item.active .song-num { animation: rgb-text 3s linear infinite; }
+        .song-item-info { flex: 1; min-width: 0; }
+        .song-item-title {
+            font-size: 0.78rem;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .song-item-sub {
+            font-size: 0.65rem;
+            color: var(--muted);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .song-item.active .song-item-title {
+            animation: rgb-text 3s linear infinite;
+            font-weight: bold;
+        }
+        .playing-icon {
+            font-size: 0.7rem;
+            display: none;
+        }
+        .song-item.active .playing-icon {
+            display: block;
+            animation: rgb-text 2s linear infinite;
+        }
 
-        .song-list { overflow-y: auto; padding: 8px; scroll-behavior: smooth; }
-        /* Item မြင့် လျှော့ချ */
-        .song-item { padding: 8px; cursor: pointer; border-radius: 10px; transition: 0.2s; margin-bottom: 4px; border: 1px solid transparent; }
-        .song-item.active { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .song-item.active .song-item-title { animation: rgb-text 3s linear infinite; font-weight: bold; }
-        /* Item font သေးခြင်း */
-        .song-item-title { font-size: 0.8rem; color: #888; }
-        
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: linear-gradient(45deg, #0ff, #0f0, #00f); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 3000; transition: transform 0.3s ease; font-size: 0.8rem; }
+        /* ── Extra Controls (Shuffle/Repeat) ── */
+        .extra-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .ex-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-mm);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .ex-btn.on {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(0,255,204,0.08);
+            box-shadow: 0 0 8px rgba(0,255,204,0.15);
+        }
+        .ex-btn.repeat-one { color: #ff2244; border-color: #ff2244; background: rgba(255,34,68,0.08); }
+
+        /* ── Tabs + Fav tab ── */
+        .tab-btn.fav-tab.on { color: #ff4466; }
+
+        /* ── Song item actions ── */
+        .song-item-actions {
+            display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+        }
+        .fav-btn, .share-btn {
+            background: none; border: none;
+            font-size: 0.85rem; cursor: pointer;
+            opacity: 0.4; transition: all 0.2s;
+            padding: 2px;
+        }
+        .fav-btn.on { opacity: 1; filter: drop-shadow(0 0 4px #ff4466); }
+        .fav-btn:active, .share-btn:active { transform: scale(1.3); opacity: 1; }
+
+        /* ── Play count badge ── */
+        .play-count {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--accent);
+            background: rgba(0,255,204,0.08);
+            border-radius: 8px;
+            padding: 1px 5px;
+            display: none;
+        }
+        .play-count.show { display: inline-block; }
+
+        /* ── Most Played section ── */
+        .hot-badge {
+            font-size: 0.6rem;
+            background: linear-gradient(90deg,#ff2244,#ff8800);
+            color: #fff;
+            border-radius: 6px;
+            padding: 1px 5px;
+            margin-left: 4px;
+            font-family: var(--font-mono);
+        }
+
+        /* Group headers for Artist/Album tab */
+        .group-header {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--accent);
+            padding: 8px 10px 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: linear-gradient(135deg, rgba(0,255,204,0.15), rgba(68,136,255,0.15));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,255,204,0.3);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 3000;
+            transition: transform 0.3s ease;
+            font-size: 0.72rem;
+            white-space: nowrap;
+        }
         .toast.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
 
 <div class="player-main-container">
-    <div class="dev-tag">Developer: ကိုမျိုး</div>    
+
+    <!-- Header + Search -->
+    <div class="header">
+        <div class="dev-tag">Developer: ကိုမျိုး</div>
+        <div class="live-dot"></div>
+    </div>
+
+    <!-- Search Bar (top) -->
+    <div class="search-wrap" style="width:100%;margin-bottom:8px;">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" id="search-input" placeholder="Search songs, artists..." oninput="onSearch(this.value)">
+            <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+        </div>
+    </div>
+
+    <!-- Player Card -->
     <div class="player-card" id="player-card">
         <div class="lyrics-box" id="lyrics-text">S 0 S MODS RGB</div>
         <div class="song-info">
@@ -113,19 +523,41 @@
             <p id="artist">Please wait</p>
         </div>
         <canvas id="visualizer-canvas"></canvas>
-        <div class="progress-bar" id="p-box" onclick="seek(event)">
-            <div id="progress"></div>
+        <div class="progress-wrap">
+            <span class="time-label" id="time-cur">0:00</span>
+            <div class="progress-bar" id="p-box" onclick="seek(event)">
+                <div id="progress"></div>
+            </div>
+            <span class="time-label" id="time-dur">0:00</span>
         </div>
         <div class="controls">
-            <button class="btn" onclick="prev()">⏮</button>
-            <button class="btn play-btn" onclick="toggle()" id="playB">PLAY</button>
-            <button class="btn" onclick="next()">⏭</button>
+            <button class="btn" onclick="prev()" title="Prev">⏮</button>
+            <button class="btn play-btn" onclick="toggle()" id="playB">▶</button>
+            <button class="btn" onclick="next()" title="Next">⏭</button>
+        </div>
+        <div class="extra-controls">
+            <button class="ex-btn" id="shuffleBtn" onclick="toggleShuffle()">🔀 Shuffle</button>
+            <button class="ex-btn" id="repeatBtn" onclick="toggleRepeat()">🔁 Repeat</button>
         </div>
     </div>
-    <div class="song-list-wrapper">
-        <div class="song-list-header">TRACKLIST</div>
+
+    <!-- Bottom Panel -->
+    <div class="bottom-panel">
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('song', this)">Songs</button>
+            <button class="tab-btn" onclick="switchTab('artist', this)">Artist</button>
+            <button class="tab-btn" onclick="switchTab('album', this)">Album</button>
+            <button class="tab-btn fav-tab" onclick="switchTab('fav', this)">❤️ Fav</button>
+            <button class="tab-btn" onclick="switchTab('hot', this)">🔥 Hot</button>
+        </div>
+
+        <div class="song-list-header" id="list-label">TRACKLIST</div>
+
+        <!-- List -->
         <div class="song-list" id="list-container">
-            <div style="text-align:center; padding:15px; color:#666; font-size: 0.8rem;">Connecting...</div>
+            <div class="empty-state">Connecting...</div>
         </div>
     </div>
 </div>
@@ -134,51 +566,97 @@
 
 <script>
     const { Client, Databases, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('69d4b1300032c235932d');
+    const client = new Client()
+        .setEndpoint('https://sgp.cloud.appwrite.io/v1')
+        .setProject('69d4b1300032c235932d');
     const databases = new Databases(client);
+
+    const DB_ID  = '69d4b25f0004ed8a26a2';
+    const COL_ID = 'cloud';
+
     const audio = document.getElementById('audio');
     const playerCard = document.getElementById('player-card');
-    
+
     let songs = [];
+    let filteredSongs = [];
     let currentIdx = 0;
+    let currentTab = 'song';
+    let searchQuery = '';
     let audioContext, analyser, source, canvas, ctx, dataArray;
     let isAudioContextInitialized = false;
 
+    // New state
+    let shuffleOn = false;
+    let repeatMode = 0; // 0=off 1=all 2=one
+    let favorites = JSON.parse(localStorage.getItem('sos_favs') || '[]');
+    let playCounts = JSON.parse(localStorage.getItem('sos_counts') || '{}');
+    let shuffleQueue = [];
+
+    async function fetchAllSongs() {
+        let allDocs = [];
+        let offset = 0;
+        const pageSize = 100;
+
+        while (true) {
+            const res = await databases.listDocuments(DB_ID, COL_ID, [
+                Query.limit(pageSize),
+                Query.offset(offset),
+                Query.orderDesc('$createdAt')
+            ]);
+            allDocs = allDocs.concat(res.documents);
+            if (allDocs.length >= res.total || res.documents.length < pageSize) break;
+            offset += pageSize;
+        }
+        return allDocs;
+    }
+
     async function initPlayer() {
         try {
-            const response = await databases.listDocuments(
-                '69d4b25f0004ed8a26a2', 
-                'cloud',
-                [Query.limit(500), Query.orderDesc("$createdAt")]
-            );
-            
-            if (response.documents && response.documents.length > 0) {
-                songs = response.documents.map(doc => {
-                    let pL = {};
-                    try { pL = JSON.parse(doc.lyrics.replace(/'/g, '"')); } 
-                    catch(e) { pL = { 0: doc.lyrics || "..." }; }
-                    return { title: doc.title, artist: doc.artist, src: doc.src, lyrics: pL };
+            const allDocs = await fetchAllSongs();
+            if (allDocs.length > 0) {
+                songs = allDocs.map(doc => {
+                    let pL = { 0: 'S 0 S MODS RGB' };
+                    try {
+                        const raw = doc.lyrics;
+                        if (typeof raw === 'object' && raw !== null) {
+                            pL = raw;
+                        } else if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+                            pL = JSON.parse(raw.replace(/'/g, '"'));
+                        } else if (typeof raw === 'string' && raw.length > 0) {
+                            pL = { 0: raw };
+                        }
+                    } catch(e) { pL = { 0: doc.lyrics || 'S 0 S MODS RGB' }; }
+                    return {
+                        title: doc.title,
+                        artist: doc.artist || 'Unknown Artist',
+                        album: doc.album || 'Unknown Album',
+                        src: doc.src,
+                        lyrics: pL
+                    };
                 });
-                
                 localStorage.setItem('cachedSongs', JSON.stringify(songs));
-                showToast('✅ Sync Completed: ' + songs.length + ' songs');
+                showToast('✅ Sync OK — ' + songs.length + ' songs');
+            } else {
+                showToast('⚠️ Database empty');
             }
-        } catch (error) { 
-            console.error("Appwrite Error:", error);
+        } catch (error) {
+            console.error('Fetch error:', error);
             const localData = localStorage.getItem('cachedSongs');
             if (localData) {
                 songs = JSON.parse(localData);
-                showToast('📡 Offline Mode: Loaded from Cache');
+                showToast('📡 Offline — Loaded from Cache (' + songs.length + ')');
             } else {
-                showToast('⚠️ No Connection');
+                showToast('⚠️ No Connection & No Cache');
             }
         }
-        
+
+        filteredSongs = [...songs];
         renderList();
         if (songs.length > 0) loadSong(0, false);
         initVisualizer();
     }
 
+    /* ── Visualizer ── */
     function initVisualizer() {
         canvas = document.getElementById('visualizer-canvas');
         ctx = canvas.getContext('2d');
@@ -198,45 +676,222 @@
             analyser.fftSize = 256;
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             isAudioContextInitialized = true;
-        } catch (e) { console.log("AudioContext blocked"); }
+        } catch(e) { console.log("AudioContext blocked"); }
     }
 
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
         if (!ctx) return;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         if (analyser) {
             analyser.getByteFrequencyData(dataArray);
-            
             let sum = 0;
-            for(let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
-            let average = sum / dataArray.length;
-            
-            // Glow intensity သေးခြင်း
-            playerCard.style.boxShadow = `0 0 ${average / 3}px rgba(0, 255, 204, 0.3)`;
-            playerCard.style.borderColor = `rgba(0, 255, 204, ${average / 300})`;
-            
-            const barWidth = (canvas.width / dataArray.length) * 2.5;
+            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+            const avg = sum / dataArray.length;
+
+            playerCard.style.boxShadow = `0 0 ${Math.max(8, avg / 4)}px rgba(0,255,204,${Math.min(0.35, avg / 400)})`;
+
+            const barW = (canvas.width / dataArray.length) * 2.5;
             let x = 0;
-            for(let i = 0; i < dataArray.length; i++) {
-                const barHeight = (dataArray[i] / 255) * canvas.height;
-                ctx.fillStyle = `hsl(${(i / dataArray.length) * 360}, 100%, 50%)`;
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 1;
+            for (let i = 0; i < dataArray.length; i++) {
+                const bH = (dataArray[i] / 255) * canvas.height;
+                ctx.fillStyle = `hsl(${(i / dataArray.length) * 360 + (Date.now() / 30)}, 100%, 55%)`;
+                ctx.fillRect(x, canvas.height - bH, barW, bH);
+                x += barW + 1;
             }
         }
     }
 
+    /* ── Search ── */
+    function onSearch(q) {
+        searchQuery = q.trim().toLowerCase();
+        document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+        applyFilter();
+        renderList();
+    }
+
+    function clearSearch() {
+        document.getElementById('search-input').value = '';
+        onSearch('');
+    }
+
+    function applyFilter() {
+        if (!searchQuery) {
+            filteredSongs = [...songs];
+            return;
+        }
+        filteredSongs = songs.filter(s =>
+            s.title.toLowerCase().includes(searchQuery) ||
+            s.artist.toLowerCase().includes(searchQuery) ||
+            (s.album && s.album.toLowerCase().includes(searchQuery))
+        );
+    }
+
+    /* ── Tabs ── */
+    function switchTab(tab, el) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        const labels = { song: 'TRACKLIST', artist: 'BY ARTIST', album: 'BY ALBUM', fav: '❤️ FAVORITES', hot: '🔥 MOST PLAYED' };
+        document.getElementById('list-label').textContent = labels[tab];
+        renderList();
+    }
+
+    /* ── Shuffle / Repeat ── */
+    function toggleShuffle() {
+        shuffleOn = !shuffleOn;
+        const btn = document.getElementById('shuffleBtn');
+        btn.classList.toggle('on', shuffleOn);
+        if (shuffleOn) buildShuffleQueue();
+        showToast(shuffleOn ? '🔀 Shuffle ON' : '🔀 Shuffle OFF');
+    }
+
+    function buildShuffleQueue() {
+        shuffleQueue = [...Array(songs.length).keys()].filter(i => i !== currentIdx);
+        for (let i = shuffleQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffleQueue[i], shuffleQueue[j]] = [shuffleQueue[j], shuffleQueue[i]];
+        }
+    }
+
+    function toggleRepeat() {
+        repeatMode = (repeatMode + 1) % 3;
+        const btn = document.getElementById('repeatBtn');
+        btn.className = 'ex-btn';
+        if (repeatMode === 1) { btn.classList.add('on'); btn.innerText = '🔁 Repeat All'; }
+        else if (repeatMode === 2) { btn.classList.add('repeat-one'); btn.innerText = '🔂 Repeat 1'; }
+        else { btn.innerText = '🔁 Repeat'; }
+        showToast(['🔁 Repeat OFF','🔁 Repeat ALL','🔂 Repeat ONE'][repeatMode]);
+    }
+
+    /* ── Favorites ── */
+    function toggleFav(idx, e) {
+        e.stopPropagation();
+        const key = songs[idx].title;
+        if (favorites.includes(key)) {
+            favorites = favorites.filter(f => f !== key);
+            showToast('💔 Removed from Favorites');
+        } else {
+            favorites.push(key);
+            showToast('❤️ Added to Favorites');
+        }
+        localStorage.setItem('sos_favs', JSON.stringify(favorites));
+        renderList();
+    }
+
+    function isFav(idx) { return favorites.includes(songs[idx].title); }
+
+    /* ── Share ── */
+    function shareSong(idx, e) {
+        e.stopPropagation();
+        const s = songs[idx];
+        const text = `🎵 ${s.title}\n🎤 ${s.artist}\n\n▶️ ${s.src}`;
+        if (navigator.share) {
+            navigator.share({ title: s.title, text: text, url: s.src }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(text).then(() => showToast('🔗 Link Copied!')).catch(() => showToast('🔗 ' + s.src));
+        }
+    }
+
+    /* ── Play Count ── */
+    function incrementCount(idx) {
+        const key = songs[idx].title;
+        playCounts[key] = (playCounts[key] || 0) + 1;
+        localStorage.setItem('sos_counts', JSON.stringify(playCounts));
+    }
+
+    function getCount(idx) { return playCounts[songs[idx].title] || 0; }
+
+    /* ── Render Song List (updated) ── */
+    function renderSongList(container, list, showCount = false) {
+        if (list.length === 0) {
+            container.innerHTML = '<div class="empty-state">No results found</div>';
+            return;
+        }
+        container.innerHTML = list.map((s, i) => {
+            const origIdx = songs.indexOf(s);
+            const isActive = origIdx === currentIdx;
+            const fav = isFav(origIdx);
+            const cnt = getCount(origIdx);
+            const isHot = showCount && cnt > 0;
+            return `
+            <div class="song-item ${isActive ? 'active' : ''}" id="item-${origIdx}" onclick="selectSong(${origIdx})" style="animation-delay:${i * 0.03}s">
+                <span class="song-num">${i + 1}</span>
+                <div class="song-item-info">
+                    <div class="song-item-title">${s.title}${isHot ? `<span class="hot-badge">▶ ${cnt}</span>` : ''}</div>
+                    <div class="song-item-sub">${s.artist}</div>
+                </div>
+                <div class="song-item-actions">
+                    <span class="playing-icon">♪</span>
+                    <button class="fav-btn ${fav ? 'on' : ''}" onclick="toggleFav(${origIdx}, event)">${fav ? '❤️' : '🤍'}</button>
+                    <button class="share-btn" onclick="shareSong(${origIdx}, event)">🔗</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /* ── Render List (updated with fav/hot tabs) ── */
     function renderList() {
         const container = document.getElementById('list-container');
-        if (songs.length === 0) return;
-        container.innerHTML = songs.map((s, i) => `
-            <div class="song-item ${i === currentIdx ? 'active' : ''}" id="item-${i}" onclick="selectSong(${i})">
-                <span class="song-item-title">${i + 1}. ${s.title}</span>
-            </div>
-        `).join('');
+        if (songs.length === 0) {
+            container.innerHTML = '<div class="empty-state">No songs found</div>';
+            return;
+        }
+        if (currentTab === 'song') {
+            renderSongList(container, filteredSongs);
+        } else if (currentTab === 'artist') {
+            renderGroupedList(container, filteredSongs, 'artist');
+        } else if (currentTab === 'album') {
+            renderGroupedList(container, filteredSongs, 'album');
+        } else if (currentTab === 'fav') {
+            const favList = songs.filter(s => favorites.includes(s.title));
+            renderSongList(container, favList);
+        } else if (currentTab === 'hot') {
+            const sorted = [...songs].filter(s => (playCounts[s.title] || 0) > 0)
+                .sort((a, b) => (playCounts[b.title] || 0) - (playCounts[a.title] || 0))
+                .slice(0, 20);
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="empty-state">Play songs to see 🔥 Most Played</div>';
+            } else {
+                renderSongList(container, sorted, true);
+            }
+        }
+    }
+
+    function renderGroupedList(container, list, key) {
+        if (list.length === 0) {
+            container.innerHTML = '<div class="empty-state">No results found</div>';
+            return;
+        }
+        const groups = {};
+        list.forEach(s => {
+            const g = s[key] || 'Unknown';
+            if (!groups[g]) groups[g] = [];
+            groups[g].push(s);
+        });
+
+        let html = '';
+        let counter = 0;
+        Object.keys(groups).sort().forEach(group => {
+            html += `<div class="group-header">${group}</div>`;
+            groups[group].forEach(s => {
+                const origIdx = songs.indexOf(s);
+                const isActive = origIdx === currentIdx;
+                counter++;
+                html += `
+                <div class="song-item ${isActive ? 'active' : ''}" id="item-g-${origIdx}" onclick="selectSong(${origIdx})" style="animation-delay:${counter * 0.025}s">
+                    <span class="song-num">${counter}</span>
+                    <div class="song-item-info">
+                        <div class="song-item-title">${s.title}</div>
+                        <div class="song-item-sub">${key === 'artist' ? (s.album || '') : s.artist}</div>
+                    </div>
+                    <span class="playing-icon">♪</span>
+                </div>`;
+            });
+        });
+        container.innerHTML = html;
     }
 
     function loadSong(index, play = true) {
@@ -247,57 +902,86 @@
         document.getElementById('lyrics-text').innerText = "S 0 S MODS RGB";
         renderList();
 
-        const activeItem = document.getElementById(`item-${index}`);
-        if (activeItem) activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const el = document.getElementById(`item-${index}`) || document.getElementById(`item-g-${index}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         if (play) {
             initAudioContext();
             if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             audio.play();
-            document.getElementById('playB').innerText = "PAUSE";
+            document.getElementById('playB').innerText = "⏸";
+            incrementCount(index);
         }
     }
 
     function selectSong(i) { loadSong(i, true); }
-    
+
     function toggle() {
         initAudioContext();
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-        if (audio.paused) { audio.play(); document.getElementById('playB').innerText = "PAUSE"; }
-        else { audio.pause(); document.getElementById('playB').innerText = "PLAY"; }
+        if (audio.paused) {
+            audio.play();
+            document.getElementById('playB').innerText = "⏸";
+        } else {
+            audio.pause();
+            document.getElementById('playB').innerText = "▶";
+        }
     }
-    
-    function next() { currentIdx = (currentIdx + 1) % songs.length; loadSong(currentIdx, true); }
-    function prev() { currentIdx = (currentIdx - 1 + songs.length) % songs.length; loadSong(currentIdx, true); }
-    
-    function seek(e) { 
+
+    function next() {
+        if (repeatMode === 2) { audio.currentTime = 0; audio.play(); return; }
+        if (shuffleOn) {
+            if (shuffleQueue.length === 0) buildShuffleQueue();
+            currentIdx = shuffleQueue.shift();
+        } else {
+            currentIdx = (currentIdx + 1) % songs.length;
+        }
+        loadSong(currentIdx, true);
+    }
+
+    function prev() {
+        if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+        currentIdx = (currentIdx - 1 + songs.length) % songs.length;
+        loadSong(currentIdx, true);
+    }
+
+    function seek(e) {
         const rect = document.getElementById('p-box').getBoundingClientRect();
-        audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration; 
+        audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+    }
+
+    function fmtTime(s) {
+        if (!s || isNaN(s)) return '0:00';
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return m + ':' + String(sec).padStart(2, '0');
     }
 
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration) return;
         const ct = Math.floor(audio.currentTime);
         const l = songs[currentIdx].lyrics;
-        const times = Object.keys(l).map(Number).sort((a,b) => a - b);
-        let currentL = document.getElementById('lyrics-text').innerText;
-        for (let t of times) { if (ct >= t) currentL = l[t]; }
-        document.getElementById('lyrics-text').innerText = currentL;
+        const times = Object.keys(l).map(Number).sort((a, b) => a - b);
+        let curL = document.getElementById('lyrics-text').innerText;
+        for (let t of times) { if (ct >= t) curL = l[t]; }
+        document.getElementById('lyrics-text').innerText = curL;
         document.getElementById('progress').style.width = (audio.currentTime / audio.duration) * 100 + '%';
+        document.getElementById('time-cur').innerText = fmtTime(audio.currentTime);
+        document.getElementById('time-dur').innerText = fmtTime(audio.duration);
     });
 
-    audio.addEventListener('ended', next);
-    
+    audio.addEventListener('ended', () => {
+        if (repeatMode === 2) { audio.currentTime = 0; audio.play(); }
+        else next();
+    });
+
     function showToast(message) {
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.innerText = message;
         document.body.appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 10);
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
     window.addEventListener('resize', () => {
