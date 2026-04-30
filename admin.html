@@ -11,7 +11,6 @@
         body { background: var(--bg); color: white; font-family: 'Noto Sans Myanmar', sans-serif; margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; height: 100vh; }
         .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; height: 100vh; }
 
-        /* Fixed Area */
         .fixed-top { padding: 20px; background: var(--bg); z-index: 100; flex-shrink: 0; }
         .admin-card { background: var(--card); padding: 20px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .status-header { display: flex; justify-content: space-between; background: #000; padding: 10px 15px; border-radius: 15px; margin-bottom: 15px; font-size: 0.7rem; color: #888; border: 1px solid rgba(0, 255, 204, 0.1); }
@@ -24,17 +23,19 @@
         .upload-btn { width: 100%; background: var(--neon); color: black; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; font-family: var(--font-main); transition: 0.3s; }
         .upload-btn:active { transform: scale(0.98); opacity: 0.8; }
 
-        /* Progress */
         .prog-container { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; margin-bottom: 10px; display: none; }
         #prog-bar { height: 100%; background: var(--neon); width: 0%; transition: 0.2s; }
 
-        /* Scroll Area */
         .list-container { flex-grow: 1; overflow-y: auto; padding: 10px 20px 20px 20px; }
-        .list-header { font-size: 10px; color: var(--neon); margin-bottom: 10px; display: flex; justify-content: space-between; letter-spacing: 1px; }
+        .list-header { font-size: 10px; color: var(--neon); margin-bottom: 10px; display: flex; justify-content: space-between; letter-spacing: 1px; align-items: center; }
+        .refresh-btn { background: rgba(0,255,204,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; border-radius: 8px; font-size: 9px; cursor: pointer; }
+
         .media-item { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
         .m-title { color: #fff; font-size: 14px; font-weight: bold; display: block; margin-bottom: 4px; }
         .m-artist { color: #666; font-size: 11px; }
-        .del-btn { background: rgba(255, 51, 102, 0.1); color: #ff3366; border: 1px solid #ff3366; padding: 8px 15px; border-radius: 10px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .del-btn { background: rgba(255, 51, 102, 0.1); color: #ff3366; border: 1px solid #ff3366; padding: 8px 15px; border-radius: 10px; font-size: 10px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
+
+        .loading-more { text-align: center; color: #444; font-size: 0.7rem; padding: 10px; }
 
         .list-container::-webkit-scrollbar { width: 4px; }
         .list-container::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
@@ -47,7 +48,7 @@
         <div class="admin-card">
             <div class="status-header">
                 <div><span class="dot"></span> PING: <span id="ping-val">0ms</span></div>
-                <div>STORAGE: <span id="storage-val">0%</span></div>
+                <div>TOTAL: <span id="file-count-top">--</span> | STORAGE: <span id="storage-val">0%</span></div>
             </div>
             <h2>SONG MANAGER</h2>
             <input type="text" id="title" placeholder="သီချင်းအမည်">
@@ -58,14 +59,17 @@
         </div>
     </div>
 
-    <div class="list-container">
-        <div class="list-header"><span>UPLOADED MEDIA</span><span id="file-count">0 Files</span></div>
+    <div class="list-container" id="scroll-area">
+        <div class="list-header">
+            <span>UPLOADED MEDIA — <span id="file-count">Loading...</span></span>
+            <button class="refresh-btn" onclick="loadList()">↻ Refresh</button>
+        </div>
         <div id="media-list"></div>
     </div>
 </div>
 
 <script>
-    const { Client, Databases, Storage, ID } = Appwrite;
+    const { Client, Databases, Storage, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('69d4b1300032c235932d');
     const databases = new Databases(client);
     const storage = new Storage(client);
@@ -83,83 +87,123 @@
         } catch (e) {}
     }, 4000);
 
-    // Load List & Storage Usage
+    // Load ALL songs with pagination (fix 25-limit issue)
     async function loadList() {
-        try {
-            const res = await databases.listDocuments(DB_ID, COL_ID);
-            const listArea = document.getElementById('media-list');
-            listArea.innerHTML = "";
-            document.getElementById('file-count').innerText = res.total + " Files";
+        const listArea = document.getElementById('media-list');
+        listArea.innerHTML = '<div class="loading-more">Loading...</div>';
 
-            let totalUsed = 0;
-            res.documents.forEach(doc => {
-                listArea.innerHTML += `<div class="media-item">
-                    <div><span class="m-title">🎵 ${doc.title}</span><span class="m-artist">🎙️ ${doc.artist || 'Unknown'}</span></div>
-                    <button class="del-btn" onclick="deleteSong('${doc.$id}', '${doc.fileId}')">DEL</button>
+        try {
+            let allDocs = [];
+            let offset = 0;
+            const pageSize = 100;
+
+            while (true) {
+                const res = await databases.listDocuments(DB_ID, COL_ID, [
+                    Query.limit(pageSize),
+                    Query.offset(offset),
+                    Query.orderDesc('$createdAt')
+                ]);
+
+                allDocs = allDocs.concat(res.documents);
+
+                // total ပေါ်မူတည်ပြီး ဆက်ဆွဲမလား ဆုံးဖြတ်
+                if (allDocs.length >= res.total || res.documents.length < pageSize) break;
+                offset += pageSize;
+            }
+
+            // Count update
+            document.getElementById('file-count').innerText = allDocs.length + ' / ' + allDocs.length + ' Files';
+            document.getElementById('file-count-top').innerText = allDocs.length + ' songs';
+
+            // Render
+            listArea.innerHTML = '';
+            if (allDocs.length === 0) {
+                listArea.innerHTML = '<div class="loading-more">သီချင်းမရှိသေးပါ</div>';
+                return;
+            }
+
+            allDocs.forEach((doc, i) => {
+                listArea.innerHTML += `
+                <div class="media-item">
+                    <div>
+                        <span class="m-title">🎵 ${i + 1}. ${doc.title}</span>
+                        <span class="m-artist">🎙️ ${doc.artist || 'Unknown'}</span>
+                    </div>
+                    <button class="del-btn" onclick="deleteSong('${doc.$id}', '${doc.fileId || ''}')">DEL</button>
                 </div>`;
             });
 
-            const files = await storage.listFiles(BUCKET_ID);
-            files.files.forEach(f => totalUsed += f.sizeOriginal);
-            document.getElementById('storage-val').innerText = ((totalUsed / (2048 * 1024 * 1024)) * 100).toFixed(1) + "%";
-        } catch (e) { console.error("Load error:", e); }
+            // Storage usage
+            try {
+                const files = await storage.listFiles(BUCKET_ID, [Query.limit(100)]);
+                let totalUsed = 0;
+                files.files.forEach(f => totalUsed += f.sizeOriginal);
+                document.getElementById('storage-val').innerText = ((totalUsed / (2048 * 1024 * 1024)) * 100).toFixed(1) + "%";
+            } catch(e) {}
+
+        } catch (e) {
+            listArea.innerHTML = '<div class="loading-more">Load Error: ' + e.message + '</div>';
+            console.error("Load error:", e);
+        }
     }
 
-    // Upload with progress & proper data structure
+    // Upload
     async function handleUpload() {
         const fileInput = document.getElementById('file');
-        const title = document.getElementById('title').value;
-        const artist = document.getElementById('artist').value;
+        const title = document.getElementById('title').value.trim();
+        const artist = document.getElementById('artist').value.trim();
 
-        if(!fileInput.files[0] || !title) return alert("အချက်အလက်အပြည့်အစုံထည့်ပါ ကိုမျိုး!");
+        if (!fileInput.files[0] || !title) return alert("အချက်အလက်အပြည့်အစုံထည့်ပါ ကိုမျိုး!");
 
         const btn = document.getElementById('up-btn');
         const pBox = document.getElementById('p-box');
         const pBar = document.getElementById('prog-bar');
 
         btn.disabled = true;
+        btn.innerText = 'Uploading...';
         pBox.style.display = 'block';
 
         try {
-            // 1. Upload to Storage
             const upFile = await storage.createFile(BUCKET_ID, ID.unique(), fileInput.files[0], [], (p) => {
                 pBar.style.width = Math.round(p.progress) + "%";
             });
-            
-            // 2. Direct View Link for User Side
+
             const viewUrl = `https://sgp.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${upFile.$id}/view?project=69d4b1300032c235932d`;
 
-            // 3. Save to Database
             await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
                 title: title,
                 artist: artist || "Unknown",
                 src: viewUrl,
-                fileId: upFile.$id // ဖျက်တဲ့အခါ သုံးဖို့အတွက် ID အမှန်ကိုသိမ်းသည်
+                fileId: upFile.$id
             });
 
-            alert("တင်ပြီးပါပြီ ကိုမျိုး!");
-            location.reload();
+            alert("တင်ပြီးပါပြီ ကိုမျိုး! ✅");
+            document.getElementById('title').value = '';
+            document.getElementById('artist').value = '';
+            document.getElementById('file').value = '';
+            pBox.style.display = 'none';
+            pBar.style.width = '0%';
+            btn.disabled = false;
+            btn.innerText = 'UPLOAD TO CLOUD';
+            loadList();
         } catch (e) {
             alert("Upload Error: " + e.message);
             btn.disabled = false;
+            btn.innerText = 'UPLOAD TO CLOUD';
         }
     }
 
-    // Delete both from DB and Storage
+    // Delete
     async function deleteSong(docId, fileId) {
-        if(!confirm("ဖျက်မှာ သေချာလား ကိုမျိုး?")) return;
+        if (!confirm("ဖျက်မှာ သေချာလား ကိုမျိုး?")) return;
         try {
-            // Database က အရင်ဖျက်သည်
             await databases.deleteDocument(DB_ID, COL_ID, docId);
-            
-            // fileId ရှိခဲ့ရင် Storage ကပါ ဖျက်သည်
-            if(fileId && fileId !== "undefined") {
+            if (fileId && fileId !== "undefined" && fileId !== "") {
                 await storage.deleteFile(BUCKET_ID, fileId);
             }
-            
             loadList();
-        } catch(e) { 
-            alert("Delete Error: " + e.message); 
+        } catch(e) {
+            alert("Delete Error: " + e.message);
             console.error(e);
         }
     }
