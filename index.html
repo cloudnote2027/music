@@ -894,6 +894,93 @@
         container.innerHTML = html;
     }
 
+    /* ── Generate S0S MODS logo as base64 PNG ── */
+    function getSoSLogoDataURL(size) {
+        const c = document.createElement('canvas');
+        c.width = size; c.height = size;
+        const x = c.getContext('2d');
+        // Background
+        x.fillStyle = '#080808';
+        x.fillRect(0, 0, size, size);
+        // RGB gradient ring
+        const ring = x.createLinearGradient(0, 0, size, size);
+        ring.addColorStop(0,    '#ff2244');
+        ring.addColorStop(0.33, '#00ffcc');
+        ring.addColorStop(0.66, '#4488ff');
+        ring.addColorStop(1,    '#ff2244');
+        x.strokeStyle = ring;
+        x.lineWidth = size * 0.06;
+        x.beginPath();
+        x.arc(size/2, size/2, size/2 - size*0.08, 0, Math.PI*2);
+        x.stroke();
+        // Inner glow circle
+        const glow = x.createRadialGradient(size/2, size/2, 0, size/2, size/2, size*0.4);
+        glow.addColorStop(0, 'rgba(0,255,204,0.15)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = glow;
+        x.beginPath();
+        x.arc(size/2, size/2, size*0.4, 0, Math.PI*2);
+        x.fill();
+        // Text "S0S"
+        const fs1 = Math.round(size * 0.28);
+        x.font = `bold ${fs1}px 'Space Mono', monospace`;
+        x.textAlign = 'center';
+        x.textBaseline = 'middle';
+        const tg = x.createLinearGradient(0, size*0.3, size, size*0.55);
+        tg.addColorStop(0, '#ff2244');
+        tg.addColorStop(0.5, '#00ffcc');
+        tg.addColorStop(1, '#4488ff');
+        x.fillStyle = tg;
+        x.shadowColor = '#00ffcc';
+        x.shadowBlur = size * 0.05;
+        x.fillText('S0S', size/2, size * 0.42);
+        // Text "MODS"
+        const fs2 = Math.round(size * 0.14);
+        x.font = `bold ${fs2}px 'Space Mono', monospace`;
+        x.fillStyle = '#e8e8e8';
+        x.shadowBlur = size * 0.02;
+        x.fillText('MODS', size/2, size * 0.62);
+        return c.toDataURL('image/png');
+    }
+
+    let _sosLogo = null;
+    function getSoSLogo() {
+        if (!_sosLogo) _sosLogo = getSoSLogoDataURL(512);
+        return _sosLogo;
+    }
+
+    function updateMediaSession() {
+        if (!('mediaSession' in navigator)) return;
+        const s = songs[currentIdx];
+        const logo = getSoSLogo();
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: s.title,
+            artist: s.artist,
+            album: s.album || 'S 0 S MODS',
+            artwork: [
+                { src: logo, sizes: '512x512', type: 'image/png' }
+            ]
+        });
+        navigator.mediaSession.setActionHandler('play',          () => { audio.play(); document.getElementById('playB').innerText = "⏸"; updateMediaSessionState(); });
+        navigator.mediaSession.setActionHandler('pause',         () => { audio.pause(); document.getElementById('playB').innerText = "▶"; updateMediaSessionState(); });
+        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
+        navigator.mediaSession.setActionHandler('nexttrack',     () => next());
+        navigator.mediaSession.setActionHandler('seekto',        (d) => { if (d.seekTime !== undefined) audio.currentTime = d.seekTime; });
+        updateMediaSessionState();
+    }
+
+    function updateMediaSessionState() {
+        if (!('mediaSession' in navigator)) return;
+        navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing';
+        if (!isNaN(audio.duration) && audio.duration > 0) {
+            navigator.mediaSession.setPositionState({
+                duration:     audio.duration,
+                playbackRate: audio.playbackRate,
+                position:     audio.currentTime
+            });
+        }
+    }
+
     function loadSong(index, play = true) {
         currentIdx = index;
         audio.src = songs[currentIdx].src;
@@ -904,6 +991,8 @@
 
         const el = document.getElementById(`item-${index}`) || document.getElementById(`item-g-${index}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        updateMediaSession();
 
         if (play) {
             initAudioContext();
@@ -926,6 +1015,7 @@
             audio.pause();
             document.getElementById('playB').innerText = "▶";
         }
+        updateMediaSessionState();
     }
 
     function next() {
@@ -968,6 +1058,7 @@
         document.getElementById('progress').style.width = (audio.currentTime / audio.duration) * 100 + '%';
         document.getElementById('time-cur').innerText = fmtTime(audio.currentTime);
         document.getElementById('time-dur').innerText = fmtTime(audio.duration);
+        updateMediaSessionState();
     });
 
     audio.addEventListener('ended', () => {
