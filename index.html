@@ -949,20 +949,25 @@
         return _sosLogo;
     }
 
+    /* ── Android Native Bridge ── */
+    function androidNotify(title, artist, playing) {
+        try { if (window.SoSPlayer) window.SoSPlayer.onPlay(title, artist, playing ? 1 : 0); } catch(e) {}
+    }
+
     function updateMediaSession() {
-        if (!('mediaSession' in navigator)) return;
         const s = songs[currentIdx];
+        androidNotify(s.title, s.artist, !audio.paused);
+
+        if (!('mediaSession' in navigator)) return;
         const logo = getSoSLogo();
         navigator.mediaSession.metadata = new MediaMetadata({
             title: s.title,
             artist: s.artist,
             album: s.album || 'S 0 S MODS',
-            artwork: [
-                { src: logo, sizes: '512x512', type: 'image/png' }
-            ]
+            artwork: [{ src: logo, sizes: '512x512', type: 'image/png' }]
         });
-        navigator.mediaSession.setActionHandler('play',          () => { audio.play(); document.getElementById('playB').innerText = "⏸"; updateMediaSessionState(); });
-        navigator.mediaSession.setActionHandler('pause',         () => { audio.pause(); document.getElementById('playB').innerText = "▶"; updateMediaSessionState(); });
+        navigator.mediaSession.setActionHandler('play',          () => { audio.play(); document.getElementById('playB').innerText = "⏸"; updateMediaSessionState(); androidNotify(s.title, s.artist, true); });
+        navigator.mediaSession.setActionHandler('pause',         () => { audio.pause(); document.getElementById('playB').innerText = "▶"; updateMediaSessionState(); androidNotify(s.title, s.artist, false); });
         navigator.mediaSession.setActionHandler('previoustrack', () => prev());
         navigator.mediaSession.setActionHandler('nexttrack',     () => next());
         navigator.mediaSession.setActionHandler('seekto',        (d) => { if (d.seekTime !== undefined) audio.currentTime = d.seekTime; });
@@ -1016,6 +1021,8 @@
             document.getElementById('playB').innerText = "▶";
         }
         updateMediaSessionState();
+        const s = songs[currentIdx];
+        androidNotify(s.title, s.artist, !audio.paused);
     }
 
     function next() {
